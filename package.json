@@ -6,7 +6,9 @@
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "cd server && npm run dev",
     "dev:client": "cd client && npm run dev",
+    "prebuild": "npm install --prefix client --include=dev && npm install --prefix server --include=dev",
     "build": "cd client && npm run build && cd ../server && npm run build",
+    "start": "cd server && npm start",
     "db:generate": "cd server && npx drizzle-kit generate",
     "db:push": "cd server && npx drizzle-kit push"
   },
