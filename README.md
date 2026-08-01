@@ -35,6 +35,7 @@
 - [Tech Stack](#-tech-stack)
 - [Project Structure](#-project-structure)
 - [Getting Started](#-getting-started)
+- [Deployment Guide](#-deployment-guide)
 - [Environment Variables](#-environment-variables)
 - [API Reference](#-api-reference)
 - [Database Schema](#-database-schema)
@@ -444,6 +445,55 @@ npm run build
 
 ---
 
+## 🚀 Deployment Guide
+
+Use this setup for the exact target you asked for: Vercel for the frontend, Render for the backend, and Neon PostgreSQL for the database.
+
+1. Create a Neon project and database.
+2. Copy the Neon connection string into the backend `DATABASE_URL`.
+3. Deploy the backend on Render using the root `render.yaml` file or by creating a Web Service from the `server/` directory.
+4. Set the backend environment variables on Render: `DATABASE_URL`, `SESSION_SECRET`, `CLIENT_ORIGIN`, `SESSION_COOKIE_SECURE`, and `SESSION_COOKIE_SAMESITE`.
+5. Set `CLIENT_ORIGIN` to the final Vercel URL for the frontend.
+6. Deploy the frontend on Vercel from the `client/` directory.
+7. Set the frontend environment variable `VITE_API_URL` to the Render backend URL.
+8. Run the backend build and start commands after deploy: `npm run build` and `npm start` inside `server/`.
+9. Run the database migration step on the backend before opening traffic.
+10. Keep uploads on local disk for now, as requested. That means the Render service must use persistent disk if you expect uploaded files to survive restarts.
+
+### Render backend steps
+
+1. Create a new Web Service on Render.
+2. Point it at the repository root and use `server` as the root directory, or connect the `server/` folder directly if your Render setup supports it.
+3. Set build command to `npm install && npm run build`.
+4. Set start command to `npm start`.
+5. Add environment variables: `DATABASE_URL`, `SESSION_SECRET`, `CLIENT_ORIGIN`, `SESSION_COOKIE_SECURE=true`, `SESSION_COOKIE_SAMESITE=none`.
+6. Use the Render-provided public URL for `CLIENT_ORIGIN` only after the Vercel deployment is live.
+
+### Vercel frontend steps
+
+1. Create a new Vercel project.
+2. Set the root directory to `client`.
+3. Leave the build command as `npm run build`.
+4. Set the output directory to Vite’s default `dist`.
+5. Add `VITE_API_URL` pointing at the Render backend URL.
+6. Deploy and confirm the browser can reach `/api` on the backend URL.
+
+### Neon steps
+
+1. Create a Neon project.
+2. Use the main branch database string as `DATABASE_URL` on Render.
+3. Keep the same database for all environments unless you explicitly want separate staging and production databases.
+
+Recommended order:
+
+1. Neon database
+2. Render backend
+3. Vercel frontend
+4. Update `CLIENT_ORIGIN` and `VITE_API_URL`
+5. Verify login, upload, and download flows
+
+---
+
 ## 🔧 Environment Variables
 
 | Variable | Required | Default | Description |
@@ -451,6 +501,11 @@ npm run build
 | `DATABASE_URL` | ✅ | — | PostgreSQL connection string |
 | `SESSION_SECRET` | ✅ | `fallback-secret-change-me` | Secret for signing session cookies |
 | `PORT` | ❌ | `3000` | Port for the Express server |
+| `CLIENT_ORIGIN` | ❌ | `http://localhost:5173` | Allowed frontend origin for CORS and cookies |
+| `SESSION_COOKIE_SECURE` | ❌ | `false` locally, `true` in production | Marks cookies as HTTPS-only |
+| `SESSION_COOKIE_SAMESITE` | ❌ | `lax` locally, `none` in production | Cookie same-site policy |
+| `VITE_API_URL` | ❌ | `/api` | Frontend API base URL |
+| `VITE_API_PROXY_TARGET` | ❌ | `http://localhost:3000` | Vite dev server proxy target |
 
 ---
 
@@ -474,7 +529,7 @@ npm run build
   "email": "alice@example.com",
   "password": "a1b2c3...64-char-sha256-hex"
 }
-
+z
 // Response 201
 {
   "id": 1,

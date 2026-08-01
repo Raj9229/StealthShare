@@ -15,15 +15,24 @@ import tokenRoutes from "./routes/tokens.js";
 
 const app = express();
 const PORT = parseInt(process.env.PORT || "3000", 10);
+const clientOrigin = process.env.CLIENT_ORIGIN || "http://localhost:5173";
+const isProduction = process.env.NODE_ENV === "production";
+
+app.set("trust proxy", 1);
 
 // Middleware
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: clientOrigin,
     credentials: true,
   })
 );
 app.use(express.json());
+
+const sessionCookieSecure = process.env.SESSION_COOKIE_SECURE
+  ? process.env.SESSION_COOKIE_SECURE === "true"
+  : isProduction;
+const sessionSameSite = process.env.SESSION_COOKIE_SAMESITE || (isProduction ? "none" : "lax");
 
 app.use(
   session({
@@ -31,10 +40,10 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: false, // Set to true in production with HTTPS
+      secure: sessionCookieSecure,
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      sameSite: "lax",
+      sameSite: sessionSameSite as "lax" | "none" | "strict",
     },
   })
 );
@@ -56,7 +65,8 @@ async function bootstrap() {
   try {
     await runMigrations();
     app.listen(PORT, () => {
-      console.log(`⚡ StealthShare server running on http://localhost:${PORT}`);
+      console.log(`⚡ StealthShare server running on port ${PORT}`);
+      console.log(`   CORS origin: ${clientOrigin}`);
     });
   } catch (error) {
     console.error("Failed to initialize database:", error);
