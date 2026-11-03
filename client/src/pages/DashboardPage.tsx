@@ -19,6 +19,10 @@ import {
   Files,
   HardDrive,
   Activity,
+  Search,
+  RefreshCw,
+  ArrowUpDown,
+  UploadCloud,
 } from "lucide-react";
 
 interface FileItem {
@@ -122,6 +126,8 @@ export default function DashboardPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [banner, setBanner] = useState<BannerState>(null);
+  const [fileSearch, setFileSearch] = useState("");
+  const [fileSort, setFileSort] = useState<"newest" | "largest" | "name">("newest");
 
   const [shareFileId, setShareFileId] = useState<number | null>(null);
   const [shareExpiryHours, setShareExpiryHours] = useState(24);
@@ -171,6 +177,16 @@ export default function DashboardPage() {
     () => files.reduce((acc, file) => acc + file.downloadsCount, 0),
     [files]
   );
+  const visibleFiles = useMemo(() => {
+    const query = fileSearch.trim().toLowerCase();
+    return [...files]
+      .filter((file) => !query || file.filename.toLowerCase().includes(query))
+      .sort((a, b) => {
+        if (fileSort === "largest") return b.size - a.size;
+        if (fileSort === "name") return a.filename.localeCompare(b.filename);
+        return new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime();
+      });
+  }, [fileSearch, fileSort, files]);
 
   const selectedFileName = selectedFile?.name ?? "";
   const shareFileName = useMemo(() => {
@@ -325,20 +341,43 @@ export default function DashboardPage() {
             <p className="hidden text-sm text-muted-foreground sm:block">
               Signed in as <span className="font-semibold text-foreground">{user?.username}</span>
             </p>
+            <button
+              type="button"
+              onClick={() => void loadFiles(true)}
+              className="icon-button h-10 w-10 rounded-xl"
+              aria-label="Refresh files"
+              title="Refresh files"
+            >
+              <RefreshCw className={`h-4 w-4 ${loadingFiles ? "animate-spin" : ""}`} />
+            </button>
             <LogoutButton />
           </div>
         </div>
       </header>
 
       <main className="mx-auto w-full max-w-7xl px-4 py-7 sm:px-6 lg:py-10">
-        <section className="subtle-enter mb-6">
-          <h1 className="text-2xl font-bold text-foreground sm:text-3xl">Secure Dashboard</h1>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground sm:text-base">
-            Upload encrypted files, manage download history, and generate private links with expiry controls.
-          </p>
+        <section className="subtle-enter mb-7 flex flex-col gap-5 rounded-3xl border border-border/70 bg-white/70 p-5 shadow-sm sm:p-7 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <div className="mb-3 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-primary">
+              <span className="h-2 w-2 rounded-full bg-success" />
+              Workspace protected
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Your secure workspace</h1>
+            <p className="mt-2 max-w-2xl text-sm text-muted-foreground sm:text-base">
+              Keep sensitive files organized, encrypted in your browser, and ready to share on your terms.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={openFilePicker}
+            className="btn-primary inline-flex shrink-0 items-center justify-center gap-2 px-4 py-2.5"
+          >
+            <UploadCloud className="h-4 w-4" />
+            Upload a file
+          </button>
         </section>
 
-        <section className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <section className="mb-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <div className="stat-card">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Total files</span>
@@ -378,7 +417,7 @@ export default function DashboardPage() {
         )}
 
         <section className="grid items-start gap-6 lg:grid-cols-[360px_1fr]">
-          <aside className="surface-card subtle-enter rounded-3xl p-5 sm:p-6 lg:sticky lg:top-24">
+          <aside id="upload-panel" className="surface-card subtle-enter rounded-3xl p-5 sm:p-6 lg:sticky lg:top-24">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-bold text-foreground">Upload & Encrypt</h2>
               <span className="pill">Browser-side AES-256</span>
@@ -498,9 +537,40 @@ export default function DashboardPage() {
           </aside>
 
           <section className="surface-card subtle-enter rounded-3xl p-5 sm:p-6">
-            <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-lg font-bold text-foreground">Your encrypted files</h2>
-              <span className="pill">{files.length} items</span>
+            <div className="mb-5 flex flex-col gap-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">File library</p>
+                  <h2 className="mt-1 text-xl font-bold text-foreground">Your encrypted files</h2>
+                </div>
+                <span className="pill">{visibleFiles.length} of {files.length} items</span>
+              </div>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <label className="relative min-w-0 flex-1">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="search"
+                    value={fileSearch}
+                    onChange={(event) => setFileSearch(event.target.value)}
+                    className="input-base pl-9"
+                    placeholder="Search files"
+                    aria-label="Search files"
+                  />
+                </label>
+                <label className="relative sm:w-44">
+                  <ArrowUpDown className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <select
+                    value={fileSort}
+                    onChange={(event) => setFileSort(event.target.value as typeof fileSort)}
+                    className="input-base appearance-none pl-9"
+                    aria-label="Sort files"
+                  >
+                    <option value="newest">Newest first</option>
+                    <option value="largest">Largest first</option>
+                    <option value="name">Name A–Z</option>
+                  </select>
+                </label>
+              </div>
             </div>
 
             {loadingFiles ? (
@@ -513,9 +583,24 @@ export default function DashboardPage() {
                   Start by uploading a file from the panel on the left.
                 </p>
               </div>
+            ) : visibleFiles.length === 0 ? (
+              <div className="rounded-2xl border border-border/70 bg-secondary/25 px-5 py-12 text-center">
+                <Search className="mx-auto h-10 w-10 text-muted-foreground" />
+                <p className="mt-3 text-sm font-semibold text-foreground">No matching files</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Try a different filename or clear the search.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setFileSearch("")}
+                  className="btn-secondary mt-4 px-3 py-2 text-sm"
+                >
+                  Clear search
+                </button>
+              </div>
             ) : (
               <div className="space-y-3">
-                {files.map((file) => (
+                {visibleFiles.map((file) => (
                   <FileRow
                     key={file.id}
                     file={file}
