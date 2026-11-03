@@ -3,7 +3,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import { encryptFile, formatFileSize } from "@/lib/crypto";
 import {
-  Plus,
   Trash2,
   Share2,
   Copy,
@@ -23,6 +22,9 @@ import {
   RefreshCw,
   ArrowUpDown,
   UploadCloud,
+  Link2,
+  ShieldCheck,
+  History,
 } from "lucide-react";
 
 interface FileItem {
@@ -37,6 +39,8 @@ type BannerState = {
   type: "success" | "error" | "info";
   message: string;
 } | null;
+
+type DashboardTab = "files" | "shared" | "activity" | "security";
 
 interface FileRowProps {
   file: FileItem;
@@ -128,6 +132,7 @@ export default function DashboardPage() {
   const [banner, setBanner] = useState<BannerState>(null);
   const [fileSearch, setFileSearch] = useState("");
   const [fileSort, setFileSort] = useState<"newest" | "largest" | "name">("newest");
+  const [activeTab, setActiveTab] = useState<DashboardTab>("files");
 
   const [shareFileId, setShareFileId] = useState<number | null>(null);
   const [shareExpiryHours, setShareExpiryHours] = useState(24);
@@ -326,7 +331,30 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-30 border-b border-border/70 bg-background/80 backdrop-blur-sm">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
+        <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-3 sm:px-6">
+          <nav className="order-3 flex w-full items-center justify-center gap-1 overflow-x-auto sm:order-none sm:w-auto" aria-label="Dashboard sections">
+            {([
+              ["files", "Files"],
+              ["shared", "Shared links"],
+              ["activity", "Activity"],
+              ["security", "Security"],
+            ] as const).map(([tab, label]) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setActiveTab(tab)}
+                className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors sm:px-4 sm:text-sm ${
+                  activeTab === tab
+                    ? "bg-white text-primary shadow-sm"
+                    : "text-muted-foreground hover:bg-white/70 hover:text-foreground"
+                }`}
+                aria-current={activeTab === tab ? "page" : undefined}
+              >
+                {label}
+              </button>
+            ))}
+          </nav>
+
           <div className="flex items-center gap-3">
             <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-linear-to-br from-primary to-accent">
               <Shield className="h-5 w-5 text-primary-foreground" />
@@ -355,50 +383,32 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-7xl px-4 py-7 sm:px-6 lg:py-10">
-        <section className="subtle-enter mb-7 flex flex-col gap-5 rounded-3xl border border-border/70 bg-white/70 p-5 shadow-sm sm:p-7 lg:flex-row lg:items-end lg:justify-between">
+      <main className="mx-auto w-full max-w-[820px] px-4 py-7 sm:px-6 lg:py-10">
+        <section className="subtle-enter mb-6 text-center">
           <div>
             <div className="mb-3 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-primary">
               <span className="h-2 w-2 rounded-full bg-success" />
               Workspace protected
             </div>
             <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Your secure workspace</h1>
-            <p className="mt-2 max-w-2xl text-sm text-muted-foreground sm:text-base">
-              Keep sensitive files organized, encrypted in your browser, and ready to share on your terms.
+            <p className="mx-auto mt-2 max-w-2xl text-sm text-muted-foreground sm:text-base">
+              Keep sensitive files encrypted in your browser and ready to share on your terms.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={openFilePicker}
-            className="btn-primary inline-flex shrink-0 items-center justify-center gap-2 px-4 py-2.5"
-          >
-            <UploadCloud className="h-4 w-4" />
-            Upload a file
-          </button>
         </section>
 
-        <section className="mb-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          <div className="stat-card">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Total files</span>
-              <Files className="h-4 w-4 text-primary" />
+        <section className="mb-6 flex flex-wrap justify-center gap-2">
+          {[
+            ["Files", files.length.toString(), Files],
+            ["Encrypted storage", formatFileSize(totalStorage), HardDrive],
+            ["Downloads", totalDownloads.toString(), Activity],
+          ].map(([label, value, Icon]) => (
+            <div key={label as string} className="pill gap-2 px-3 py-2">
+              <Icon className="h-3.5 w-3.5" />
+              <span>{label as string}</span>
+              <strong className="text-foreground">{value as string}</strong>
             </div>
-            <p className="mt-2 text-2xl font-extrabold text-foreground">{files.length}</p>
-          </div>
-          <div className="stat-card">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Encrypted storage</span>
-              <HardDrive className="h-4 w-4 text-primary" />
-            </div>
-            <p className="mt-2 text-2xl font-extrabold text-foreground">{formatFileSize(totalStorage)}</p>
-          </div>
-          <div className="stat-card sm:col-span-2 xl:col-span-1">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Total downloads</span>
-              <Activity className="h-4 w-4 text-primary" />
-            </div>
-            <p className="mt-2 text-2xl font-extrabold text-foreground">{totalDownloads}</p>
-          </div>
+          ))}
         </section>
 
         {banner && (
@@ -416,125 +426,110 @@ export default function DashboardPage() {
           </div>
         )}
 
-        <section className="grid items-start gap-6 lg:grid-cols-[360px_1fr]">
-          <aside id="upload-panel" className="surface-card subtle-enter rounded-3xl p-5 sm:p-6 lg:sticky lg:top-24">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-foreground">Upload & Encrypt</h2>
-              <span className="pill">Browser-side AES-256</span>
-            </div>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              className="hidden"
-              onChange={handleFileSelect}
-            />
-
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={openFilePicker}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  openFilePicker();
-                }
-              }}
-              onDragOver={(event) => {
-                event.preventDefault();
-                setDragOver(true);
-              }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={handleDrop}
-              className={`rounded-2xl border border-dashed p-5 text-center transition-colors ${
-                dragOver
-                  ? "border-primary bg-primary/10"
-                  : selectedFileName
-                  ? "border-success/45 bg-success/10"
-                  : "border-border bg-secondary/25"
-              }`}
-              aria-label="Select file to upload"
-            >
-              {selectedFile ? (
-                <>
-                  <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-success/20">
-                    <FileText className="h-5 w-5 text-success" />
-                  </div>
-                  <p className="truncate text-sm font-semibold text-foreground">{selectedFile.name}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{formatFileSize(selectedFile.size)}</p>
-                </>
-              ) : (
-                <>
-                  <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15">
-                    <Plus className="h-5 w-5 text-primary" />
-                  </div>
-                  <p className="text-sm font-semibold text-foreground">Drop file or tap to browse</p>
-                  <p className="mt-1 text-xs text-muted-foreground">Any file type, up to 100 MB</p>
-                </>
-              )}
-            </div>
-
-            {selectedFile && (
-              <button
-                type="button"
-                onClick={() => setSelectedFile(null)}
-                className="btn-secondary mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-sm"
-              >
-                <X className="h-3.5 w-3.5" />
-                Remove file
-              </button>
-            )}
-
-            <div className="mt-4">
-              <label className="mb-1.5 block text-sm font-medium text-muted-foreground">
-                <Lock className="mr-1 inline h-3.5 w-3.5" />
-                Encryption password
-              </label>
-              <div className="relative">
+        {activeTab === "files" ? (
+          <section className="space-y-6">
+            <div className="surface-card subtle-enter rounded-3xl p-5 sm:p-6">
+              <div className="mb-5 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Private transfer</p>
+                  <h2 className="mt-1 text-xl font-bold text-foreground">Upload & encrypt</h2>
+                </div>
+                <span className="pill">AES-256</span>
+              </div>
+              <div className="grid gap-5 md:grid-cols-[1.05fr_0.95fr] md:items-center">
                 <input
-                  type={showEncPassword ? "text" : "password"}
-                  value={encPassword}
-                  onChange={(e) => setEncPassword(e.target.value)}
-                  className="input-base pr-11"
-                  placeholder="Use a strong private key"
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  onChange={handleFileSelect}
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowEncPassword((prev) => !prev)}
-                  className="icon-button absolute right-2 top-1/2 h-8 w-8 -translate-y-1/2 rounded-lg"
-                  aria-label={showEncPassword ? "Hide encryption password" : "Show encryption password"}
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={openFilePicker}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      openFilePicker();
+                    }
+                  }}
+                  onDragOver={(event) => {
+                    event.preventDefault();
+                    setDragOver(true);
+                  }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={handleDrop}
+                  className={`flex min-h-40 flex-col items-center justify-center rounded-2xl border border-dashed p-5 text-center transition-colors ${
+                    dragOver
+                      ? "border-primary bg-primary/10"
+                      : selectedFileName
+                      ? "border-success/45 bg-success/10"
+                      : "border-border bg-secondary/25"
+                  }`}
+                  aria-label="Select file to upload"
                 >
-                  {showEncPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
+                  <div className={`mb-3 flex h-11 w-11 items-center justify-center rounded-xl ${
+                    selectedFile ? "bg-success/20" : "bg-primary/15"
+                  }`}>
+                    {selectedFile ? <FileText className="h-5 w-5 text-success" /> : <UploadCloud className="h-5 w-5 text-primary" />}
+                  </div>
+                  <p className="max-w-full truncate text-sm font-semibold text-foreground">
+                    {selectedFile ? selectedFile.name : "Drop a file here or browse"}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {selectedFile ? formatFileSize(selectedFile.size) : "Any file type, up to 100 MB"}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-muted-foreground">
+                    <Lock className="mr-1 inline h-3.5 w-3.5" />
+                    Encryption password
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showEncPassword ? "text" : "password"}
+                      value={encPassword}
+                      onChange={(e) => setEncPassword(e.target.value)}
+                      className="input-base pr-11"
+                      placeholder="Use a strong private key"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowEncPassword((prev) => !prev)}
+                      className="icon-button absolute right-2 top-1/2 h-8 w-8 -translate-y-1/2 rounded-lg"
+                      aria-label={showEncPassword ? "Hide encryption password" : "Show encryption password"}
+                    >
+                      {showEncPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  {selectedFile && (
+                    <button type="button" onClick={() => setSelectedFile(null)} className="btn-secondary mt-3 px-3 py-1.5 text-sm">
+                      Remove file
+                    </button>
                   )}
-                </button>
+                  {uploadProgress && <p className="mt-3 text-xs text-primary">{uploadProgress}</p>}
+                  <button
+                    type="button"
+                    onClick={handleUpload}
+                    disabled={!selectedFile || !encPassword || uploading}
+                    className="btn-primary mt-4 flex w-full items-center justify-center gap-2 px-4 py-2.5 disabled:cursor-not-allowed disabled:opacity-55"
+                  >
+                    {uploading ? (
+                      <div className="h-4 w-4 rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground animate-spin" />
+                    ) : (
+                      <>
+                        <Lock className="h-4 w-4" />
+                        Encrypt & Upload
+                      </>
+                    )}
+                  </button>
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    Your password stays in this browser and is never sent to the server.
+                  </p>
+                </div>
               </div>
             </div>
-
-            {uploadProgress && <p className="mt-3 text-xs text-primary">{uploadProgress}</p>}
-
-            <button
-              type="button"
-              onClick={handleUpload}
-              disabled={!selectedFile || !encPassword || uploading}
-              className="btn-primary mt-4 flex w-full items-center justify-center gap-2 px-4 py-2.5 disabled:cursor-not-allowed disabled:opacity-55"
-            >
-              {uploading ? (
-                <div className="h-4 w-4 rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground animate-spin" />
-              ) : (
-                <>
-                  <FileText className="h-4 w-4" />
-                  Encrypt & Upload
-                </>
-              )}
-            </button>
-
-            <p className="mt-3 text-xs text-muted-foreground">
-              Keep this password safe. Recipients need the same password to decrypt downloads.
-            </p>
-          </aside>
 
           <section className="surface-card subtle-enter rounded-3xl p-5 sm:p-6">
             <div className="mb-5 flex flex-col gap-4">
@@ -611,7 +606,76 @@ export default function DashboardPage() {
               </div>
             )}
           </section>
-        </section>
+          </section>
+        ) : activeTab === "shared" ? (
+          <section className="surface-card subtle-enter rounded-3xl p-6 text-center sm:p-10">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
+              <Link2 className="h-6 w-6 text-primary" />
+            </div>
+            <h2 className="mt-4 text-xl font-bold text-foreground">Shared links</h2>
+            <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+              Active share links will appear here when the current API provides them.
+            </p>
+            <div className="mx-auto mt-6 max-w-md rounded-2xl border border-border/70 bg-secondary/25 p-4 text-sm text-muted-foreground">
+              No shared links are available in the file list yet.
+            </div>
+          </section>
+        ) : activeTab === "activity" ? (
+          <section className="surface-card subtle-enter rounded-3xl p-5 sm:p-6">
+            <div className="mb-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Recent activity</p>
+              <h2 className="mt-1 text-xl font-bold text-foreground">Workspace timeline</h2>
+            </div>
+            {files.length === 0 ? (
+              <div className="rounded-2xl border border-border/70 bg-secondary/25 px-5 py-12 text-center">
+                <History className="mx-auto h-10 w-10 text-muted-foreground" />
+                <p className="mt-3 text-sm font-semibold text-foreground">No activity yet</p>
+                <p className="mt-1 text-sm text-muted-foreground">Uploads and downloads will appear here.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {visibleFiles.map((file) => (
+                  <div key={file.id} className="file-row-surface flex items-center gap-3 p-4">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                      <Activity className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-foreground">{file.filename}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Uploaded {new Date(file.uploadDate).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <span className="pill shrink-0">{file.downloadsCount} downloads</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        ) : (
+          <section className="surface-card subtle-enter rounded-3xl p-6 sm:p-8">
+            <div className="mb-6 flex items-start gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
+                <ShieldCheck className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Protection overview</p>
+                <h2 className="mt-1 text-xl font-bold text-foreground">Security controls</h2>
+              </div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {[
+                ["Browser-side AES-256", "Files are encrypted before upload."],
+                ["TOTP 2FA", "No TOTP status is exposed by the current auth context."],
+                ["Self-destructing links", "Share links can expire and limit attempts."],
+              ].map(([title, description]) => (
+                <div key={title} className="surface-muted rounded-2xl p-4">
+                  <p className="text-sm font-semibold text-foreground">{title}</p>
+                  <p className="mt-2 text-xs leading-5 text-muted-foreground">{description}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
       </main>
 
       {shareFileId !== null && (
