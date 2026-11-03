@@ -254,6 +254,65 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+
+  .dashboard-shell .surface-card {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba(211, 221, 233, 0.9);
+    box-shadow:
+      0 20px 45px rgba(34, 56, 88, 0.07),
+      0 2px 6px rgba(34, 56, 88, 0.03);
+  }
+
+  .dashboard-shell .stat-card,
+  .dashboard-shell .file-row-surface {
+    border-color: #e2e8f0;
+    background: rgba(255, 255, 255, 0.82);
+  }
+
+  .dashboard-shell .file-row-surface:hover {
+    border-color: #a9c1ef;
+    background: #ffffff;
+    box-shadow: 0 8px 20px rgba(29, 78, 216, 0.06);
+  }
+
+  .dashboard-shell .pill {
+    border-color: #c9d8f6;
+    background: #f0f4ff;
+    color: #31539b;
+  }
+
+  .dashboard-shell .btn-primary {
+    background: linear-gradient(135deg, #2456cf 0%, #1d4ed8 58%, #2146a7 100%);
+    border-color: #2456cf;
+    box-shadow: 0 6px 14px rgba(29, 78, 216, 0.16);
+  }
+
+  .dashboard-shell .btn-primary:hover {
+    background: linear-gradient(135deg, #1d4ed8 0%, #1b46c0 58%, #1c3e98 100%);
+    box-shadow: 0 8px 18px rgba(29, 78, 216, 0.2);
+  }
+
+  .dashboard-shell .icon-button {
+    border-color: #d7e0eb;
+    background: rgba(255, 255, 255, 0.76);
+    color: #3b506c;
+  }
+
+  .dashboard-shell .icon-button:hover {
+    border-color: #aec3e9;
+    background: #f1f5ff;
+    color: #1d4ed8;
+  }
+
+  .dashboard-shell .input-base {
+    border-color: #d4deea;
+    background: rgba(255, 255, 255, 0.9);
+  }
+
+  .dashboard-shell .input-base:focus-visible {
+    border-color: #5c82d7;
+    box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.11);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

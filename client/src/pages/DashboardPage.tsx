@@ -329,7 +329,7 @@ export default function DashboardPage() {
   }, [shareLink]);
 
   return (
-    <div className="min-h-screen">
+    <div className="dashboard-shell min-h-screen">
       <header className="sticky top-0 z-30 border-b border-border/70 bg-background/80 backdrop-blur-sm">
         <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-3 sm:px-6">
           <nav className="order-3 flex w-full items-center justify-center gap-1 overflow-x-auto sm:order-none sm:w-auto" aria-label="Dashboard sections">
