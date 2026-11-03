@@ -366,10 +366,10 @@ export default function DashboardPage() {
           <div
             className={`mb-6 rounded-2xl border px-4 py-3 text-sm ${
               banner.type === "success"
-                ? "border-success/40 bg-success/15 text-[#b9fbc8]"
+                ? "border-success/40 bg-success/15 text-success-foreground"
                 : banner.type === "error"
                 ? "border-destructive/40 bg-destructive/10 text-destructive-foreground"
-                : "border-primary/35 bg-primary/10 text-[#c4f3ec]"
+                : "border-primary/35 bg-primary/10 text-info-foreground"
             }`}
             role="status"
           >
@@ -612,7 +612,7 @@ export default function DashboardPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="rounded-xl border border-success/40 bg-success/15 p-3 text-sm text-[#b9fbc8]">
+                <div className="rounded-xl border border-success/40 bg-success/15 p-3 text-sm text-success-foreground">
                   Link generated. Share it with the password through a separate secure channel.
                 </div>
 

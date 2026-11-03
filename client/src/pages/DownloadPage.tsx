@@ -188,12 +188,12 @@ export default function DownloadPage() {
               </div>
 
               {success ? (
-                <div className="rounded-2xl border border-success/40 bg-success/15 p-4 text-[#b9fbc8]">
+                <div className="rounded-2xl border border-success/40 bg-success/15 p-4 text-success-foreground">
                   <div className="flex items-start gap-3">
                     <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" />
                     <div>
                       <p className="font-semibold">File decrypted and downloaded</p>
-                      <p className="mt-1 text-sm text-[#b9fbc8]/85">Check your downloads folder.</p>
+                      <p className="mt-1 text-sm text-success-foreground/85">Check your downloads folder.</p>
                     </div>
                   </div>
 
